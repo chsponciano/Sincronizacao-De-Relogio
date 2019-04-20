@@ -10,28 +10,30 @@ import java.rmi.server.UnicastRemoteObject;
  * @author Carlos Henrique Ponciano da Silva && Vinicius Luis da Silva
  */
 public class ServerUtil extends UnicastRemoteObject implements IServer {
-    private int time, difference;
+    private int time, difference, port;
     private String ip;
 
-    public ServerUtil() throws RemoteException, UnknownHostException {
+    public ServerUtil(int port) throws RemoteException, UnknownHostException {
         this.time = this.converterHourByMinute();
+        this.port = port;
         this.difference = 0;
         this.ip = InetAddress.getLocalHost().getHostAddress();
+        System.out.println("Time: " + this.time);
     }
 
     @Override
     public int generateRandomTime() throws RemoteException {
-        return (int) Math.random() * 23;
+        return (int) (Math.random() * 23);
     }
 
     @Override
     public int generateRandomMinutes() throws RemoteException {
-        return (int) Math.random() * 59;
+        return (int) (Math.random() * 59);
     }
     
     @Override
     public int converterHourByMinute() throws RemoteException {
-        return (this.generateRandomTime() * 60) + this.generateRandomMinutes();
+        return Math.abs((this.generateRandomTime() * 60) + this.generateRandomMinutes());
     }
 
     @Override
@@ -57,6 +59,13 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
     @Override
     public String getIp() throws RemoteException {
         return this.ip;
+    }
+
+    @Override
+    public void resetServerTime() throws RemoteException {
+        this.setDifference(0);
+        this.time = generateRandomTime();
+        System.out.println("New Time: " + time);
     }
     
     

@@ -22,11 +22,14 @@ public class ClientUtil implements IClient {
     public void initializeRMI(ArrayList<String> ipServer) throws Exception {
         Registry registry;
         IServer server;
+        String[] aux;
         
         for (String ip : ipServer) {
-            registry = LocateRegistry.getRegistry(ip);
-            server = (IServer) registry.lookup("ServerUtilRMI");
-            System.out.println("Serivdor do ip "+ server.getIp() + " inicializado com o horário em minutos "+ server.getTime());
+            aux = ip.split(":");
+            registry = LocateRegistry.getRegistry(aux[0], Integer.parseInt(aux[1]));
+            server = (IServer) registry.lookup("ServerUtil");
+            System.out.println("Server ip "+ aux[0] + ":" + aux[1] +" initialized with the time in minutes "+ server.getTime());
+            servers.add(server);
         }
     }
 
@@ -34,7 +37,7 @@ public class ClientUtil implements IClient {
     public int recordTotalDifference() throws RemoteException {
         int totalDifference = 0;
         for (IServer s : servers) {
-            s.setDifference(s.getTime() - servers.get(0).getTime());
+            s.setDifference(Math.abs(s.getTime() - servers.get(0).getTime()));
             totalDifference += s.getDifference();
         }
         return totalDifference;
@@ -48,7 +51,7 @@ public class ClientUtil implements IClient {
     @Override
     public void assignDifference(int average) throws RemoteException {
         for (IServer s : servers) {
-            s.setTime(average + (-1 * s.getDifference()));
+            s.setTime(average + s.getDifference());
         }
     }
 
@@ -67,7 +70,7 @@ public class ClientUtil implements IClient {
     @Override
     public void resetServerTime() throws RemoteException {
         for (IServer s : servers) {
-            s.generateRandomTime();
+            s.resetServerTime();
         }
     }
 }

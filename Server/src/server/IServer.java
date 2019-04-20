@@ -1,7 +1,6 @@
 package server;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
+import java.rmi.*;
 
 /**
  *
@@ -17,4 +16,5 @@ public interface IServer extends Remote{
     public int getDifference() throws RemoteException;
     public void setDifference(int difference) throws RemoteException;
     public String getIp() throws RemoteException;
+    public void resetServerTime() throws RemoteException;
 }

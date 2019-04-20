@@ -1,9 +1,8 @@
 package server;
 
-import java.net.UnknownHostException;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Scanner;
 
 /**
  *
@@ -13,14 +12,16 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            ServerUtil serverRmi = new ServerUtil();
-            Registry registry = LocateRegistry.getRegistry();
-            registry.rebind("ServerUtilRMI", serverRmi);
-            System.out.println("Servidor de controle de Relógio " + serverRmi + " pronto para utilização | IP: " + serverRmi.getIp());
-        } catch (RemoteException ex) {
-            System.out.println("Erro RemoteException ao executar: " + ex.getMessage());
-        } catch (UnknownHostException ex) {
-            System.out.println("Erro UnknownHostException ao executar: " + ex.getMessage());
+            Scanner leitor = new Scanner(System.in);
+            System.out.print("Enter the server port: ");
+            int port = Integer.parseInt(leitor.nextLine());
+            
+            IServer serverRmi = new ServerUtil(port);
+            Registry registry = LocateRegistry.createRegistry(port);
+            registry.rebind("ServerUtil", serverRmi);
+            System.out.println(serverRmi + " Ready-to-use clock control server | IP: " + serverRmi.getIp());
+        } catch (Exception ex) {
+            System.out.println("Error: " + ex.getMessage());
         }
     }
 }

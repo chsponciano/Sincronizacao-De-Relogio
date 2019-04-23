@@ -42,6 +42,8 @@ public class Main {
             Registry registry = LocateRegistry.createRegistry(port);
             registry.rebind("ServerUtil", serverRmi);
             
+            serverRmi.distributeClient();
+            
         } catch (Exception ex) {
             System.out.println("Error: " + ex.getMessage());
         }

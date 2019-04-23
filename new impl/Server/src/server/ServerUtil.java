@@ -170,4 +170,18 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
         });
         
     }
+
+    @Override
+    public List<IServer> getServers() throws RemoteException {
+        return this.getServers();
+    }
+
+    @Override
+    public void distributeClient() throws RemoteException {
+        this.listClient.forEach(client -> {
+            try{
+                client.setServers(otherServers);
+            }catch(Exception e){}
+        });
+    }
 }

@@ -2,7 +2,6 @@ package server;
 
 import client.IClient;
 import java.rmi.*;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,7 +15,9 @@ public interface IServer extends Remote{
     
     public void setServers(List<IServer> servers) throws RemoteException;
     public void addServer(IServer server) throws RemoteException;
+    public List<IServer> getServers() throws RemoteException;
     
     public void setClients(List<IClient> clients) throws RemoteException;
     public void addClient(IClient clients) throws RemoteException;
+    public void distributeClient() throws RemoteException;
 }

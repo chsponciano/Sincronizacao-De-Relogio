@@ -14,9 +14,6 @@ public class Main {
     public static void main(String[] args) {
         String ip;
         int port;
-        ClientUtil client;
-
-        ArrayList<String> ips = new ArrayList<>();
         Scanner leitor = new Scanner(System.in);
 
         System.out.print("Enter the valid server IP: ");
@@ -31,16 +28,9 @@ public class Main {
         int portClient = Integer.parseInt(leitor.nextLine());
 
         try {
-            client = new ClientUtil(ip, port);
-
-            IClient clientRmi = client;
-            Registry registry = LocateRegistry.createRegistry(portClient);
-            registry.rebind("ClientUtil", clientRmi);
-
-            client.communicateCoordinator(clientRmi);
-
+            new ClientUtil(ip, port, portClient);
         } catch (Exception ex) {
-            System.out.println("Error: " + ex.getMessage());
+           ex.printStackTrace();
         }
     }
 }

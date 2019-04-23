@@ -3,8 +3,7 @@ package client;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.ArrayList;
-import java.util.List;
+import java.rmi.server.UnicastRemoteObject;
 
 import server.IServer;
 
@@ -12,9 +11,8 @@ import server.IServer;
  *
  * @author Carlos Henrique Ponciano da Silva && Vinicius Luis da Silva
  */
-public class ClientUtil implements IClient {
+public class ClientUtil extends UnicastRemoteObject implements IClient {
 
-    public List<IServer> servers = new ArrayList();
     private int time;
 
     private int generateRandomHours() {
@@ -29,19 +27,19 @@ public class ClientUtil implements IClient {
         return Math.abs((this.generateRandomHours() * 60) + this.generateRandomMinutes());
     }
 
-    public ClientUtil(String ip, int port) throws Exception {
-        this.initializeRMI(ip, port);
+    public ClientUtil(String ip, int port, int portClient) throws Exception {
+        this.initializeRMI(ip, port, portClient);
     }
 
-    public void communicateCoordinator(IClient c) throws RemoteException {        
-        servers.get(0).addClient(c);
-    }
-
-    private void initializeRMI(String ip, int port) throws Exception {
+    private void initializeRMI(String ip, int port, int portClient) throws Exception {
         Registry registry = LocateRegistry.getRegistry(ip, port);
         IServer server = (IServer) registry.lookup("ServerUtil");
-        this.setServers(server.getServers());
         this.time = converterHourByMinute();
+
+        Registry registryClient = LocateRegistry.createRegistry(portClient);
+        registryClient.rebind("ClientUtil", this);
+
+        server.addClient(this);
     }
 
     @Override
@@ -52,11 +50,6 @@ public class ClientUtil implements IClient {
     @Override
     public void setTime(int time) throws RemoteException {
         this.time += time;
+        System.out.println("Ajuste de Hora");
     }
-
-    @Override
-    public void setServers(List<IServer> servers) throws RemoteException {
-        this.servers = servers;
-    }
-
 }

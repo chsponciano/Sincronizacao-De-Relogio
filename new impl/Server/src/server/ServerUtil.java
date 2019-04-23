@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -61,7 +63,7 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
                 try {
                     Thread.sleep(0L);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    
                 }
             } while (!aux.get());
         }
@@ -81,7 +83,7 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
             try {
                 server.addServer(this);
             } catch (Exception e) {
-                e.printStackTrace();
+                
             }
         });
     }
@@ -104,9 +106,20 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
             try {
                 server.setCoordinator(this);
             } catch (Exception e) {
-                e.printStackTrace();
+                
             }
         });
+        
+        new Thread(() -> { 
+            while(true){
+                try {
+                    Thread.sleep(10000);
+                    if(!this.listClient.isEmpty())
+                        this.timeSetting();
+                } catch (Exception ex) {             
+                }
+            }
+        }).start();
     }
 
     private int generateRandomTime() throws RemoteException {
@@ -123,21 +136,26 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
 
     @Override
     public void addClient(IClient clients) throws RemoteException {
-        if(this.isCoordinator){
+        System.out.println("addClient");
+        if (this.isCoordinator) {
             this.listClient.add(clients);
         }
-        
-        try{
+
+        try {
             this.coordinator.addClient(clients);
-        }catch(Exception e){
+        } catch (Exception e) {
             this.initializeElection();
         }
         
+        this.synchronizeClients();
+    }
+
+    private void synchronizeClients() {
+        System.out.println("synchronizeClients");
         this.otherServers.forEach(server -> {
             try {
                 server.setClients(this.listClient);
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception e) { 
             }
         });
     }
@@ -146,42 +164,42 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
     public void setClients(List<IClient> clients) throws RemoteException {
         this.listClient = clients;
     }
-    
-    public void timeSetting(){
+
+    public void timeSetting() {
+        System.out.println("timeSetting");
         AtomicReference<Integer> totalDifference = new AtomicReference<>(0);
+        List<IClient> aux = new ArrayList();
         this.listClient.forEach(client -> {
             try {
                 totalDifference.set(totalDifference.get() + client.getTime(this.time));
             } catch (Exception e) {
-                e.printStackTrace();
+                aux.add(client);
             }
         });
+
+        this.listClient.removeAll(aux);
         
         int averageDifference = totalDifference.get() / (this.listClient.size() + 1); //acrescenta mais um para o servidor
-        
+
         this.time += averageDifference;
-        
+
         this.listClient.forEach(client -> {
             try {
                 client.setTime(averageDifference);
             } catch (Exception e) {
-                e.printStackTrace();
+                aux.add(client);
             }
         });
         
+        this.listClient.removeAll(aux);
+        
+        this.synchronizeClients();
+
     }
 
     @Override
     public List<IServer> getServers() throws RemoteException {
+        System.out.println("server.ServerUtil.getServers()");
         return this.getServers();
-    }
-
-    @Override
-    public void distributeClient() throws RemoteException {
-        this.listClient.forEach(client -> {
-            try{
-                client.setServers(otherServers);
-            }catch(Exception e){}
-        });
     }
 }

@@ -19,5 +19,4 @@ public interface IServer extends Remote{
     
     public void setClients(List<IClient> clients) throws RemoteException;
     public void addClient(IClient clients) throws RemoteException;
-    public void distributeClient() throws RemoteException;
 }

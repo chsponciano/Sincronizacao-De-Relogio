@@ -26,8 +26,8 @@ public class Main {
             shouldContinue = leitor.nextLine().equalsIgnoreCase("Y");
             
             while (shouldContinue) {
-                //System.out.print("Ip: ");
-                String ip = InetAddress.getLocalHost().getHostAddress();//leitor.nextLine();
+                System.out.print("Ip: ");
+                String ip = leitor.nextLine();
                 System.out.print("Port: ");
                 int p = Integer.parseInt(leitor.nextLine());
                 System.out.print("Should continue? (Y/N): ");

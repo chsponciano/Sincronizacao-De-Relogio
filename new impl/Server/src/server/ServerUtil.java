@@ -7,6 +7,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -35,7 +36,7 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
         this.startedElection = false;
 
         this.time = this.converterHourByMinute();
-        System.out.println("Time: " + this.time);
+        System.out.println("Init Time: " + this.time);
     }
 
     private void initializeElection() throws RemoteException {
@@ -63,7 +64,7 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
                 try {
                     Thread.sleep(0L);
                 } catch (InterruptedException e) {
-                    
+
                 }
             } while (!aux.get());
         }
@@ -71,6 +72,10 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
         this.startedElection = false;
     }
 
+    private String convertTime(int time){
+        return Math.abs(time / 60) + ":" + Math.abs(time % 60);
+    }
+    
     @Override
     public boolean hasStartedElection() throws RemoteException {
         return this.startedElection;
@@ -83,7 +88,7 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
             try {
                 server.addServer(this);
             } catch (Exception e) {
-                
+
             }
         });
     }
@@ -106,20 +111,24 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
             try {
                 server.setCoordinator(this);
             } catch (Exception e) {
-                
+
             }
         });
-        
-        new Thread(() -> { 
-            while(true){
+
+        new Thread(() -> {
+            System.out.println("Init coordiantor thread");
+            while (true) {
                 try {
-                    Thread.sleep(10000);
-                    if(!this.listClient.isEmpty())
+                    Thread.sleep(2000);
+                    if (!this.listClient.isEmpty()) {
                         this.timeSetting();
-                } catch (Exception ex) {             
-                }
+                    }
+
+                } catch (Exception ex) { }
             }
         }).start();
+        
+        System.out.println("New coordiantor Elected");
     }
 
     private int generateRandomTime() throws RemoteException {
@@ -136,26 +145,26 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
 
     @Override
     public void addClient(IClient clients) throws RemoteException {
-        System.out.println("addClient");
         if (this.isCoordinator) {
             this.listClient.add(clients);
+        } else {
+            try {
+                this.coordinator.addClient(clients);
+            } catch (Exception e) {
+                this.initializeElection();
+                this.coordinator.addClient(clients);
+            }
         }
 
-        try {
-            this.coordinator.addClient(clients);
-        } catch (Exception e) {
-            this.initializeElection();
-        }
-        
         this.synchronizeClients();
+        System.out.println("New client added");
     }
 
     private void synchronizeClients() {
-        System.out.println("synchronizeClients");
         this.otherServers.forEach(server -> {
             try {
                 server.setClients(this.listClient);
-            } catch (Exception e) { 
+            } catch (Exception e) {
             }
         });
     }
@@ -166,40 +175,43 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
     }
 
     public void timeSetting() {
-        System.out.println("timeSetting");
+        System.out.println("init berkeley");
+        HashMap<IClient, Integer> differenceClient = new HashMap<>();
         AtomicReference<Integer> totalDifference = new AtomicReference<>(0);
         List<IClient> aux = new ArrayList();
         this.listClient.forEach(client -> {
             try {
-                totalDifference.set(totalDifference.get() + client.getTime(this.time));
+                int difference =  client.getTime(this.time);
+                differenceClient.put(client, difference);
+                totalDifference.set(totalDifference.get() + difference);
             } catch (Exception e) {
                 aux.add(client);
             }
         });
 
         this.listClient.removeAll(aux);
-        
-        int averageDifference = totalDifference.get() / (this.listClient.size() + 1); //acrescenta mais um para o servidor
+
+        final int averageDifference = totalDifference.get() / (this.listClient.size() + 1); //acrescenta mais um para o servidor
 
         this.time += averageDifference;
-
+        System.out.println("Ajust Time: " + this.convertTime(this.time));
+        
         this.listClient.forEach(client -> {
             try {
-                client.setTime(averageDifference);
+                client.setTime(averageDifference - (differenceClient.get(client) * (-1)));
             } catch (Exception e) {
                 aux.add(client);
             }
         });
-        
+
         this.listClient.removeAll(aux);
-        
+
         this.synchronizeClients();
 
     }
 
     @Override
     public List<IServer> getServers() throws RemoteException {
-        System.out.println("server.ServerUtil.getServers()");
         return this.getServers();
     }
 }

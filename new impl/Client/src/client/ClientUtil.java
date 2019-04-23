@@ -35,7 +35,8 @@ public class ClientUtil extends UnicastRemoteObject implements IClient {
         Registry registry = LocateRegistry.getRegistry(ip, port);
         IServer server = (IServer) registry.lookup("ServerUtil");
         this.time = converterHourByMinute();
-
+        System.out.println("Init Time: " + this.time);
+        
         Registry registryClient = LocateRegistry.createRegistry(portClient);
         registryClient.rebind("ClientUtil", this);
 
@@ -50,6 +51,10 @@ public class ClientUtil extends UnicastRemoteObject implements IClient {
     @Override
     public void setTime(int time) throws RemoteException {
         this.time += time;
-        System.out.println("Ajuste de Hora");
+        System.out.println("Ajust Time: " + this.convertTime(this.time));
+    }
+    
+    private String convertTime(int time){
+        return Math.abs(time / 60) + ":" + Math.abs(time % 60);
     }
 }

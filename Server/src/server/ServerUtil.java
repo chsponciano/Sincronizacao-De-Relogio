@@ -11,8 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -36,7 +34,7 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
         this.startedElection = false;
 
         this.time = this.converterHourByMinute();
-        System.out.println("Init Time: " + this.time);
+        System.out.println("Init Time in minute: " + this.time);
     }
 
     private void initializeElection() throws RemoteException {
@@ -73,7 +71,10 @@ public class ServerUtil extends UnicastRemoteObject implements IServer {
     }
 
     private String convertTime(int time){
-        return Math.abs(time / 60) + ":" + Math.abs(time % 60);
+        int minuto = time % 60;
+        int hora = time / 60;
+        
+        return String.format("%02d", Math.abs(hora)) + ":" + String.format("%02d", Math.abs(minuto));
     }
     
     @Override
